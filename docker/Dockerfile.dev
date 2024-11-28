@@ -1,0 +1,82 @@
+ARG PHP_VERSION
+FROM php:${PHP_VERSION}
+
+## Diretório da aplicação
+ARG APP_DIR=/var/www/app
+
+## Versão da Lib do Redis para PHP
+ARG REDIS_LIB_VERSION=5.3.7
+
+### apt-utils é um extensão de recursos do gerenciador de pacotes APT
+RUN apt-get update -y && apt-get install -y --no-install-recommends \
+    apt-utils \
+    supervisor
+
+# dependências recomendadas de desenvolvido para ambiente linux
+RUN apt-get update && apt-get install -y \
+    zlib1g-dev \
+    libzip-dev \
+    unzip \
+    libpng-dev \
+    libpq-dev \
+    libssl-dev \
+    pkg-config \
+    libbrotli-dev \
+    libcurl4-openssl-dev \
+    git \
+    libxml2-dev
+
+RUN docker-php-ext-install mysqli pdo pdo_mysql session xml
+
+# Instala o Node.js
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs
+
+# Instala e habilitar o Redis
+RUN pecl install redis-${REDIS_LIB_VERSION} \
+    && docker-php-ext-enable redis
+
+RUN docker-php-ext-install zip iconv simplexml pcntl gd fileinfo
+
+### Instalar e habilitar o Swoole
+RUN pecl install swoole
+RUN docker-php-ext-enable swoole
+
+# Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+### Supervisor permite monitorar e controlar vários processos (LINUX)
+### Bastante utilizado para manter processos em Daemon, ou seja, executando em segundo plano
+COPY ./docker/supervisord/supervisord.octane.conf /etc/supervisor/conf.d/supervisord.conf
+
+COPY ./docker/php/extra-php.ini "$PHP_INI_DIR/99_extra.ini"
+
+WORKDIR $APP_DIR
+RUN cd $APP_DIR
+RUN chown www-data:www-data $APP_DIR
+
+### NGINX
+RUN apt-get install nginx -y
+RUN rm -rf /etc/nginx/sites-enabled/* && rm -rf /etc/nginx/sites-available/*
+COPY ./docker/nginx/sites.octane.conf /etc/nginx/sites-enabled/default.conf
+COPY ./docker/nginx/error.html /var/www/html/error.html
+
+COPY --chown=www-data:www-data composer.* ./
+COPY package*.json ./
+
+RUN composer install --no-interaction --no-scripts
+RUN npm install
+
+
+COPY --chown=www-data:www-data . .
+
+### Comandos úteis para otimização da aplicação
+RUN composer dump --no-interaction
+RUN php artisan clear-compiled
+RUN php artisan optimize
+
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+EXPOSE 80
+
+CMD ["sh", "-c", "php artisan migrate --force && /usr/bin/supervisord -c /etc/supervisor/supervisord.conf"]

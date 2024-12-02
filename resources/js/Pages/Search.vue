@@ -1,60 +1,3 @@
-<script setup>
-import { Inertia } from "@inertiajs/inertia";
-import { ref, watch } from "vue";
-import pickBy from 'lodash/pickBy'
-
-import ShopLayout from "@/Layouts/ShopLayout.vue";
-import ProductCard from "@/Components/ProductCard.vue";
-import ProductCategoryFilter from "@/Components/ProductFilters/ProductCategoryFilter.vue";
-import ProductPriceFilter from "@/Components/ProductFilters/ProductPriceFilter.vue";
-import ProductSearch from "@/Components/ProductFilters/ProductSearch.vue";
-import AppliedFilters from "@/Components/ProductFilters/AppliedFilters.vue";
-import SortProducts from "@/Components/ProductFilters/SortProducts.vue";
-import Pagination from "@/Components/Pagination.vue";
-
-const props = defineProps({
-    products: Object,
-    categories: Array,
-    category: String,
-    search: String,
-    min_price: String,
-    max_price: String,
-    sortBy: String,
-});
-
-const filters = ref({
-    category: props.category,
-    search: props.search,
-    min_price: props.min_price,
-    max_price: props.max_price,
-    sortBy: props.sortBy,
-});
-
-const setCategory = (value) => {
-    filters.value.category = value
-}
-
-const setPrice = (value) => {
-    filters.value.min_price = value.selectedMin;
-    filters.value.max_price = value.selectedMax;
-}
-
-const setSearch = (value) => {
-    filters.value.search = value
-}
-
-const setSortBy = (value) => {
-    filters.value.sortBy = value
-}
-
-watch(filters.value, value => {
-    Inertia.get(route("shop"), pickBy(value), {
-        preserveState: true,
-        replace: true,
-    });
-});
-</script>
-
 <template>
     <ShopLayout>
         <Head title="Shop" />
@@ -113,3 +56,60 @@ watch(filters.value, value => {
         </div>
     </ShopLayout>
 </template>
+
+<script setup>
+import { Inertia } from "@inertiajs/inertia";
+import { ref, watch } from "vue";
+import pickBy from 'lodash/pickBy'
+
+import ShopLayout from "@/Layouts/ShopLayout.vue";
+import ProductCard from "@/Components/ProductCard.vue";
+import ProductCategoryFilter from "@/Components/ProductFilters/ProductCategoryFilter.vue";
+import ProductPriceFilter from "@/Components/ProductFilters/ProductPriceFilter.vue";
+import ProductSearch from "@/Components/ProductFilters/ProductSearch.vue";
+import AppliedFilters from "@/Components/ProductFilters/AppliedFilters.vue";
+import SortProducts from "@/Components/ProductFilters/SortProducts.vue";
+import Pagination from "@/Components/Pagination.vue";
+
+const props = defineProps({
+    products: Object,
+    categories: Array,
+    category: String,
+    search: String,
+    min_price: String,
+    max_price: String,
+    sortBy: String,
+});
+
+const filters = ref({
+    category: props.category,
+    search: props.search,
+    min_price: props.min_price,
+    max_price: props.max_price,
+    sortBy: props.sortBy,
+});
+
+const setCategory = (value) => {
+    filters.value.category = value
+}
+
+const setPrice = (value) => {
+    filters.value.min_price = value.selectedMin;
+    filters.value.max_price = value.selectedMax;
+}
+
+const setSearch = (value) => {
+    filters.value.search = value
+}
+
+const setSortBy = (value) => {
+    filters.value.sortBy = value
+}
+
+watch(filters.value, value => {
+    Inertia.get(route("shop"), pickBy(value), {
+        preserveState: true,
+        replace: true,
+    });
+});
+</script>

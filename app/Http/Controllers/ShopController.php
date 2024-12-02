@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\FilterProductRequest;
 use App\Http\Resources\CategoryResource;
 use App\Http\Resources\ProductResource;
 use App\Models\Category;
@@ -14,22 +13,28 @@ class ShopController extends Controller
 {
     public function __invoke(Request $request)
     {
-        $products = ProductResource::collection(
-            Product::query()
-                ->withCategories($request->category ?? '')
-                ->withMinPrice($request->min_price ?? '')
-                ->withMaxPrice($request->max_price ?? '')
-                ->withSearch($request->search ?? '')
-                ->withSortBy($request->sortBy ?? '')
-                ->with('category')
-                ->where('available_quantity', '>', 0)
-                ->paginate(8)
-                ->withQueryString()
-        );
+        $products = cache()->remember('products', 600, function () use ($request) {
+            return ProductResource::collection(
+                Product::query()
+                    ->withCategories($request->category ?? '')
+                    ->withMinPrice($request->min_price ?? '')
+                    ->withMaxPrice($request->max_price ?? '')
+                    ->withSearch($request->search ?? '')
+                    ->withSortBy($request->sortBy ?? '')
+                    ->with('category')
+                    ->where('available_quantity', '>', 0)
+                    ->paginate(16)
+                    ->withQueryString()
+            );
+        });
 
-        $categories = CategoryResource::collection(Category::withCount('products')->get());
+        $categories = cache()->remember('categories', 600, function () {
+            return CategoryResource::collection(Category::withCount('products')->get());
+        });
 
-        $users = User::all()->toArray();
+        $users = cache()->remember('users', 600, function () {
+            return User::all()->toArray();
+        });
 
         return inertia('Home', [
             'products' => $products,
@@ -42,22 +47,28 @@ class ShopController extends Controller
 
     public function index(Request $request)
     {
-        $products = ProductResource::collection(
-            Product::query()
-                ->withCategories($request->category ?? '')
-                ->withMinPrice($request->min_price ?? '')
-                ->withMaxPrice($request->max_price ?? '')
-                ->withSearch($request->search ?? '')
-                ->withSortBy($request->sortBy ?? '')
-                ->with('category')
-                ->where('available_quantity', '>', 0)
-                ->paginate(8)
-                ->withQueryString()
-        );
+        $products = cache()->remember('products', 600, function () use ($request) {
+            return ProductResource::collection(
+                Product::query()
+                    ->withCategories($request->category ?? '')
+                    ->withMinPrice($request->min_price ?? '')
+                    ->withMaxPrice($request->max_price ?? '')
+                    ->withSearch($request->search ?? '')
+                    ->withSortBy($request->sortBy ?? '')
+                    ->with('category')
+                    ->where('available_quantity', '>', 0)
+                    ->paginate(16)
+                    ->withQueryString()
+            );
+        });
 
-        $categories = CategoryResource::collection(Category::withCount('products')->get());
+        $categories = cache()->remember('categories', 600, function () {
+            return CategoryResource::collection(Category::withCount('products')->get());
+        });
 
-        return inertia('Search', [
+        // dd($request->category);
+
+        return Inertia('Search', [
             'products' => $products,
             'categories' => $categories,
             'category' => $request->category ?? '',

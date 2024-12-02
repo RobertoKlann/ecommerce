@@ -9,8 +9,12 @@ class ProductController extends Controller
 {
     public function show(Product $product)
     {
-        return inertia('Product/Show', [
-            'product' => new ProductResource($product->load('category'))
+        $product = cache()->remember('product_slug_' . $product->slug, 600, function () use ($product) {
+            return new ProductResource($product->load('category'));
+        });
+
+        return Inertia('Product/Show', [
+            'product' => $product
         ]);
     }
 }

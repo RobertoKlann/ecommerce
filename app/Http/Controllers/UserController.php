@@ -8,8 +8,12 @@ class UserController extends Controller
 {
     public function index()
     {
-        return inertia('User/Index', [
-            'users' => User::all()->toArray()
+        $users = cache()->remember('users', 600, function () {
+            return User::all()->toArray();
+        });
+
+        return Inertia('User/Index', [
+            'users' => $users
         ]);
     }
 }

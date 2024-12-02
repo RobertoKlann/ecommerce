@@ -4,8 +4,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Author: Teste, apenas testes de tecnologia como Vue, Laravel e Inertia">
 
-    {{-- <title inertia>{{ config('app.name', 'Laravel') }}</title> --}}
     <title inertia>Web 2.0</title>
 
     <!-- Scripts -->
